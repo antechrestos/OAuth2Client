@@ -59,6 +59,7 @@ class CredentialManager(object):
         self.proxies = proxies if proxies is not None else dict(http='', https='')
         self.authorization_code_context = None
         self.refresh_token = None
+        self._response_tokens = None
         self._session = None
         if service_information.skip_ssl_verifications:
             from requests.packages.urllib3.exceptions import InsecureRequestWarning
@@ -172,12 +173,12 @@ class CredentialManager(object):
             CredentialManager._handle_bad_response(response)
         else:
             _logger.debug(response.text)
-            response_tokens = response.json()
+            self._response_tokens = response.json()
             if contain_refresh_token and 'refresh_token' in request_parameters:
-                self.refresh_token = response_tokens.get('refresh_token', request_parameters['refresh_token'])
+                self.refresh_token = self._response_tokens.get('refresh_token', request_parameters['refresh_token'])
             elif contain_refresh_token:
-                self.refresh_token = response_tokens['refresh_token']
-            self._access_token = response_tokens['access_token']
+                self.refresh_token = self._response_tokens['refresh_token']
+            self._access_token = self._response_tokens['access_token']
 
     @property
     def _access_token(self):
