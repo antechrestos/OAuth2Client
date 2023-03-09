@@ -138,19 +138,20 @@ class CredentialManager(object):
                 self.authorization_code_context = None
 
     def init_with_authorize_code(self, redirect_uri: str, code: str, **kwargs):
-        self._token_request(self._grant_code_request(code, redirect_uri, **kwargs),
-                            "offline_access" in self.service_information.scopes)
+        return self._token_request(self._grant_code_request(code, redirect_uri, **kwargs),
+                                   "offline_access" in self.service_information.scopes)
 
     def init_with_user_credentials(self, login: str, password: str):
-        self._token_request(self._grant_password_request(login, password), True)
+        return self._token_request(self._grant_password_request(login, password), True)
 
     def init_with_client_credentials(self):
-        self._token_request(self._grant_client_credentials_request(), False)
+        return self._token_request(self._grant_client_credentials_request(), False)
 
     def init_with_token(self, refresh_token: str):
-        self._token_request(self._grant_refresh_token_request(refresh_token), False)
+        result = self._token_request(self._grant_refresh_token_request(refresh_token), False)
         if self.refresh_token is None:
             self.refresh_token = refresh_token
+        return result
 
     def _grant_code_request(self, code: str, redirect_uri: str, **kwargs) -> dict:
         return dict(grant_type='authorization_code',
@@ -176,7 +177,7 @@ class CredentialManager(object):
     def _refresh_token(self):
         payload = self._grant_refresh_token_request(self.refresh_token)
         try:
-            self._token_request(payload, False)
+            return self._token_request(payload, False)
         except OAuthError as err:
             if err.status_code == HTTPStatus.UNAUTHORIZED:
                 _logger.debug('refresh_token - unauthorized - cleaning token')
@@ -199,12 +200,13 @@ class CredentialManager(object):
             CredentialManager._handle_bad_response(response)
         else:
             _logger.debug(response.text)
-            self._process_token_response(response.json(), refresh_token_mandatory)
+            return self._process_token_response(response.json(), refresh_token_mandatory)
 
     def _process_token_response(self, token_response: dict, refresh_token_mandatory: bool):
         self.refresh_token = token_response['refresh_token'] if refresh_token_mandatory \
             else token_response.get('refresh_token')
         self._access_token = token_response['access_token']
+        return token_response
 
     @property
     def _access_token(self) -> Optional[str]:
