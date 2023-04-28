@@ -191,7 +191,7 @@ class CredentialManager(object):
             headers['Authorization'] = 'Basic %s' % self.service_information.auth
         else:
             request_parameters["client_id"] = self.service_information.client_id
-            request_parameters["client_secret"] = self.service_information.client_secret
+            request_parameters["client_secret"] = ""
         response = requests.post(self.service_information.token_service,
                                  data=request_parameters,
                                  headers=headers,
