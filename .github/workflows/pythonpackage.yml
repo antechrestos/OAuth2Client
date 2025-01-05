@@ -36,3 +36,6 @@ jobs:
 
     - name: Launch tests
       run: poetry run pytest
+
+    - name: Launch Linting
+      run: poetry run flake8 --show-source --statistics

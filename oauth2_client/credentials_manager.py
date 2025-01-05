@@ -1,4 +1,4 @@
-import base64
+from base64 import b64encode
 import logging
 from http import HTTPStatus
 from threading import Event
@@ -38,8 +38,7 @@ class ServiceInformation(object):
 
     @property
     def authorization_header(self):
-        return 'Basic %s' % base64.b64encode(bytes('%s:%s' % (self.client_id, self.client_secret), 'UTF-8'))\
-            .decode('UTF-8')
+        return f"Basic {b64encode(bytes('%s:%s' % (self.client_id, self.client_secret), 'UTF-8')).decode('UTF-8')}"
 
     @property
     def public_api(self):
@@ -86,7 +85,7 @@ class CredentialManager(object):
             error = response.json()
             raise OAuthError(HTTPStatus(response.status_code), error.get('error'), error.get('error_description'))
         except BaseException as ex:
-            if type(ex) != OAuthError:
+            if not isinstance(ex, OAuthError):
                 _logger.exception(
                     '_handle_bad_response - error while getting error as json - %s - %s' % (type(ex), str(ex)))
                 raise OAuthError(HTTPStatus(response.status_code), 'unknown_error', response.text)

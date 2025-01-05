@@ -1,0 +1,7 @@
+[flake8]
+ignore = E203, W503
+max-line-length = 130
+max-complexity = 16
+buildins = OAuth2Client
+exclude = .git,.github,.venv,.eggs,build
+
