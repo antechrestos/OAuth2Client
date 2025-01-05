@@ -4,4 +4,5 @@ tests/oauth2_client_tests/sandbox.py
 build/
 dist/
 oauth2_client.egg-info/
+.venv/
 
