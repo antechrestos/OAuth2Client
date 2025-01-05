@@ -2,7 +2,6 @@ import json
 import logging
 import threading
 import unittest
-from cgi import parse_header
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
@@ -64,10 +63,10 @@ class FakeOAuthHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         try:
-            ctype, pdict = parse_header(self.headers['content-type'])
+            ctype = self.headers.get_content_type()
             if ctype == 'application/x-www-form-urlencoded':
                 length = int(self.headers['content-length'])
-                parameters = parse_qs(self.rfile.read(length), keep_blank_values=1)
+                parameters = parse_qs(self.rfile.read(length), keep_blank_values=True)
                 self._handle_post(parameters)
             else:
                 _logger.debug('FakeOAuthHandler - invalid content type')
