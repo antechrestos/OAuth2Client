@@ -84,7 +84,7 @@ class FakeOAuthHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
 
-class TestServer(object):
+class MockTestServer(object):
     def __init__(self, port, handler_class):
         self.httpd = _ReuseAddressTcpServer('', port, handler_class)
 
@@ -112,7 +112,7 @@ class TestManager(unittest.TestCase):
                 test_case.assertEqual(parameters.get('state', None), 'state_test')
                 test_case.assertEqual(parameters.get('client_id', None), 'client_id_test')
                 test_case.assertEqual(parameters.get('scope', None), 'scope1 scope2')
-        with TestServer(authorize_server_port, CheckAuthorizeHandler):
+        with MockTestServer(authorize_server_port, CheckAuthorizeHandler):
             manager = None
             try:
                 manager = CredentialManager(service_information, proxies=dict(http=''))
@@ -137,7 +137,7 @@ class TestManager(unittest.TestCase):
                 # send bad state
                 parameters['state'] = 'other_state'
 
-        with TestServer(authorize_server_port, CheckAuthorizeHandlerbadState):
+        with MockTestServer(authorize_server_port, CheckAuthorizeHandlerbadState):
             manager = None
             try:
                 manager = CredentialManager(service_information, proxies=dict(http=''))
@@ -232,7 +232,7 @@ class TestManager(unittest.TestCase):
                     self.end_headers()
                     self.wfile.write(bytes(body, 'UTF-8'))
 
-        with TestServer(api_server_port, BearerHandler):
+        with MockTestServer(api_server_port, BearerHandler):
             _logger.debug('test_get_token_with_code - server started')
             api_url = 'http://localhost:%d/api/uri' % api_server_port
             manager = CredentialManager(service_information, proxies=dict(http=''))
@@ -278,7 +278,7 @@ class TestManager(unittest.TestCase):
                     self.send_header("Content-Length", 0)
                     self.end_headers()
 
-        with TestServer(token_server_port, CheckGetTokenWithCode):
+        with MockTestServer(token_server_port, CheckGetTokenWithCode):
             manager = CredentialManager(service_information, proxies=dict(http=''))
             call_request(manager)
             if not no_refresh_token:

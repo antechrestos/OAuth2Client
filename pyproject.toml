@@ -1,3 +1,6 @@
+[tool.black]
+line-length = 130
+
 [tool.poetry]
 name = "oauth2-client"
 version = "1.4.2"
@@ -14,6 +17,8 @@ python = ">=3.9"
 requests = ">=2.5.0"
 
 [tool.poetry.group.dev.dependencies]
+black= "24.10.0"
+flake8= "7.1.1"
 pytest = "~8.2.2"
 
 [tool.pytest.ini_options]

@@ -4,14 +4,18 @@ import threading
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler
 from socketserver import TCPServer
-from typing import Callable, Any, Type, Optional
+from typing import Callable, Optional, Any
+try:
+    from typing import Self
+except ImportError:  # before python 3.11
+    from typing_extensions import Self
 from urllib.parse import unquote
 
 _logger = logging.getLogger(__name__)
 
 
 class _ReuseAddressTcpServer(TCPServer):
-    def __init__(self, host: str, port: int, handler_class: Type[BaseHTTPRequestHandler]):
+    def __init__(self, host: str, port: int, handler_class: Callable[[Any, Any, Self], BaseHTTPRequestHandler]):
         self.allow_reuse_address = True
         TCPServer.__init__(self, (host, port), handler_class)
 
@@ -32,11 +36,12 @@ def start_http_server(port: int, host: str = '', callback: Optional[Callable[[di
         def do_GET(self):
             _logger.debug('GET - %s' % self.path)
             params_received = read_request_parameters(self.path)
-            response = 'Response received (%s). Result was transmitted to the original thread. You can close this window.' % json.dumps(
-                params_received)
+            response = (f"Response received ({json.dumps(params_received)})."
+                        " Result was transmitted to the original thread. You can close this window."
+                        )
             self.send_response(HTTPStatus.OK.value, 'OK')
             self.send_header("Content-type", 'text/plain')
-            self.send_header("Content-Length", len(response))
+            self.send_header("Content-Length", str(len(response)))
             self.end_headers()
             try:
                 self.wfile.write(bytes(response, 'UTF-8'))
@@ -46,7 +51,11 @@ def start_http_server(port: int, host: str = '', callback: Optional[Callable[[di
                 self.wfile.flush()
 
     _logger.debug('start_http_server - instantiating server to listen on "%s:%d"', host, port)
-    httpd = _ReuseAddressTcpServer(host, port, Handler)
+    httpd = _ReuseAddressTcpServer(
+        host,
+        port,
+        lambda request, client_address, server: Handler(request, client_address, server)
+    )
 
     def serve():
         _logger.debug('server daemon - starting server')

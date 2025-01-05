@@ -65,7 +65,7 @@ class TestServer(unittest.TestCase):
         if idx_start >= 0:
             idx_end = text.find('}', idx_start)
             if idx_end >= 0:
-                return json.loads(text[idx_start: idx_end+1])
+                return json.loads(text[idx_start: idx_end + 1])
             else:
                 return dict()
         else:
