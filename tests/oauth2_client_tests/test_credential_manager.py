@@ -190,6 +190,36 @@ class TestManager(unittest.TestCase):
                                                 scope=' '.join(service_information.scopes),
                                                 refresh_token=refresh_token))
 
+    def test_token_response_secrets_not_logged(self):
+        access_token = 'SECRET-access-token-7f3a9c'
+        refresh_token = 'SECRET-refresh-token-9b2e6f'
+        id_token = 'SECRET-id-token-1a2b3c'
+
+        class SecretTokenHandler(FakeOAuthHandler):
+            def _handle_post(self, parameters):
+                response_body = dict(access_token=access_token, refresh_token=refresh_token,
+                                     id_token=id_token, token_type='bearer', expires_in=1199)
+                response = json.dumps(response_body)
+                self.send_response(HTTPStatus.OK.value, 'OK')
+                self.send_header("Content-type", 'text/plain')
+                self.send_header("Content-Length", len(response))
+                self.end_headers()
+                self.wfile.write(bytes(response, 'UTF-8'))
+
+        with MockTestServer(token_server_port, SecretTokenHandler):
+            manager = CredentialManager(service_information, proxies=dict(http=''))
+            with self.assertLogs('oauth2_client.credentials_manager', level='DEBUG') as captured:
+                manager.init_with_user_credentials('the username', 'the password')
+            self.assertEqual(manager._access_token, access_token)
+            self.assertEqual(manager.refresh_token, refresh_token)
+            logged = '\n'.join(captured.output)
+            self.assertNotIn(access_token, logged)
+            self.assertNotIn(refresh_token, logged)
+            self.assertNotIn(id_token, logged)
+            self.assertNotIn('"access_token"', logged)
+            # debug logging of the token request itself still works
+            self.assertTrue(any('token request' in line for line in captured.output))
+
     def test_bearer_requests(self):
         access_token = 'the access token'
         test_case = self
