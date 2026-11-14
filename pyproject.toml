@@ -20,6 +20,7 @@ requests = ">=2.5.0"
 black= "26.10.1"
 flake8= "7.1.1"
 pytest = "~9.0.3"
+twine = ">=6.0"
 
 [tool.pytest.ini_options]
 console_output_style = "count"
