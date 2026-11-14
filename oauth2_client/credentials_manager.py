@@ -203,7 +203,9 @@ class CredentialManager(object):
         if response.status_code != HTTPStatus.OK.value:
             CredentialManager._handle_bad_response(response)
         else:
-            _logger.debug(response.text)
+            # never log the token grant response body: it contains access/refresh/id tokens
+            _logger.debug('token request (grant_type=%s) to %s returned status %s',
+                          request_parameters['grant_type'], self.service_information.token_service, response.status_code)
             self._process_token_response(response.json(), refresh_token_mandatory)
 
     def _process_token_response(self, token_response: dict, refresh_token_mandatory: bool):
